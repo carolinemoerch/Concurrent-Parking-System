@@ -10,8 +10,8 @@
 
 std::mutex entry_mtx;
 std::mutex exit_mtx;
-std::mutex entry_queue_mtx; //Låser hvis en anden bil benytter entry gate.
-std::mutex exit_queue_mtx; //Låser hvis en anden bil benytter exit gate
+std::mutex entry_queue_mtx;
+std::mutex exit_queue_mtx; 
 std::condition_variable cv_entry, cv_exit, cv_queue_entry, cv_queue_exit;
 
 //entry gate signals
