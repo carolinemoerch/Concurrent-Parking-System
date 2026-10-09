@@ -54,6 +54,7 @@ void entry_gate() {
         cv_entry.notify_one();
 
         entry_lock.unlock();
+        
     }
          
 }
@@ -99,6 +100,7 @@ void car(int id) {
 
     entry_busy = true; // Reserve the gates
     entry_queue.pop();
+    entry_gate_lock.unlock(); //Other cars can get in the queue
 
     //Car enters
     std::unique_lock<std::mutex> entry_lock(entry_mtx);
@@ -121,10 +123,11 @@ void car(int id) {
     entry_lock.unlock();
 
     // Nu må næste bil kører igennem porten
+    entry_gate_lock.lock();
     entry_busy = false;
-    cv_queue_entry.notify_one();
+    cv_queue_entry.notify_all(); //Notify all waiting cars. Only the first in the queue can proceed.
     entry_gate_lock.unlock();
-      
+    
 
     //Car is parked for x seconds
     int seconds = id + 2;
@@ -142,6 +145,7 @@ void car(int id) {
 
     exit_busy = true; // Reserve the gates
     exit_queue.pop();
+    exit_gate_lock.unlock(); //Other cars kan get in the queue
 
     //Car exits
     std::unique_lock<std::mutex> exit_lock(exit_mtx);
@@ -162,9 +166,10 @@ void car(int id) {
     });
 
     exit_lock.unlock();
-
-    exit_busy = false; //Release entry gate busy. New car can drive outside.
-    cv_queue_exit.notify_one();
+    
+    exit_gate_lock.lock();
+    exit_busy = false; //Release entry gate busy. New car can drive outside
+    cv_queue_exit.notify_all(); //Notify all waiting cars. Only the first in the queue can proceed.
     exit_gate_lock.unlock();
 
 }
